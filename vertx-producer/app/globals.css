@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-syne: 'Syne', sans-serif;
+  --font-space-mono: 'Space Mono', monospace;
+  --font-dm-sans: 'DM Sans', sans-serif;
+}
+
+/* Grid texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(124,106,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,106,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0e0e14; }
+::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #7c6aff; }
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid #e8ff47;
+  outline-offset: 2px;
+}
+
+/* File input */
+input[type="file"] { cursor: pointer; }
+input[type="file"]::-webkit-file-upload-button { display: none; }
+
+@layer utilities {
+  .font-syne  { font-family: var(--font-syne); }
+  .font-mono  { font-family: var(--font-space-mono); }
+}

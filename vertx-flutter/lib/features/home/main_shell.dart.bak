@@ -1,0 +1,52 @@
+// lib/features/home/main_shell.dart
+// VERTX — Bottom nav shell
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/l10n/app_localizations.dart';
+
+class MainShell extends StatelessWidget {
+  final Widget child;
+  const MainShell({super.key, required this.child});
+
+  int _selectedIndex(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/search'))   return 1;
+    if (location.startsWith('/watching')) return 2;
+    if (location.startsWith('/profile'))  return 3;
+    return 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final idx = _selectedIndex(context);
+
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: idx,
+          onTap: (i) {
+            switch (i) {
+              case 0: context.go('/home');     break;
+              case 1: context.go('/search');   break;
+              case 2: context.go('/watching'); break;
+              case 3: context.go('/profile');  break;
+            }
+          },
+          items: [
+            BottomNavigationBarItem(icon: const Icon(Icons.home_outlined),       activeIcon: const Icon(Icons.home),        label: l.navHome),
+            BottomNavigationBarItem(icon: const Icon(Icons.search_outlined),     activeIcon: const Icon(Icons.search),      label: l.navSearch),
+            BottomNavigationBarItem(icon: const Icon(Icons.play_circle_outline), activeIcon: const Icon(Icons.play_circle), label: l.navWatching),
+            BottomNavigationBarItem(icon: const Icon(Icons.person_outline),      activeIcon: const Icon(Icons.person),      label: l.navProfile),
+          ],
+        ),
+      ),
+    );
+  }
+}

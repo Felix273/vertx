@@ -1,0 +1,187 @@
+// lib/features/home/home_screen.dart
+// VERTX — Main home feed: Featured + drama rows
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/api/api_service.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../shared/models/models.dart';
+import '../../shared/widgets/widgets.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _api = ApiService();
+  HomeFeed? _feed;
+  bool      _loading = true;
+  String?   _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFeed();
+  }
+
+  Future<void> _loadFeed() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final feed = await _api.getHomeFeed();
+      setState(() { _feed = feed; _loading = false; });
+    } catch (_) {
+      setState(() { _error = 'Imeshindwa kupakia. / Failed to load.'; _loading = false; });
+    }
+  }
+
+  void _openSeries(Series s) => context.push('/series/${s.id}');
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: RichText(
+          text: const TextSpan(
+            style: TextStyle(fontFamily: 'Syne', fontSize: 22, fontWeight: FontWeight.w800),
+            children: [
+              TextSpan(text: 'VERT', style: TextStyle(color: AppColors.textPrimary)),
+              TextSpan(text: 'X',    style: TextStyle(color: AppColors.gold)),
+            ],
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.go('/search'),
+          ),
+        ],
+      ),
+      body: _loading
+        ? _buildShimmer()
+        : _error != null
+          ? _buildError(l)
+          : _buildFeed(l),
+    );
+  }
+
+  Widget _buildFeed(AppLocalizations l) {
+    final feed = _feed!;
+    return RefreshIndicator(
+      color: AppColors.gold,
+      backgroundColor: AppColors.surface,
+      onRefresh: _loadFeed,
+      child: CustomScrollView(
+        slivers: [
+          // Featured hero
+          if (feed.featured.isNotEmpty)
+            SliverToBoxAdapter(
+              child: FeaturedBanner(
+                series: feed.featured.first,
+                onTap:  () => _openSeries(feed.featured.first),
+              ),
+            ),
+
+          // Genre filter chips
+          SliverToBoxAdapter(child: _GenreFilter(onGenreSelected: (_) {})),
+
+          SliverToBoxAdapter(child: const SizedBox(height: 28)),
+
+          // New series row
+          SliverToBoxAdapter(
+            child: SeriesRow(
+              title:  l.newSeries,
+              series: feed.newContent,
+              onTap:  _openSeries,
+            ),
+          ),
+
+          SliverToBoxAdapter(child: const SizedBox(height: 28)),
+
+          // Free row
+          if (feed.free.isNotEmpty)
+            SliverToBoxAdapter(
+              child: SeriesRow(
+                title:  l.free,
+                series: feed.free,
+                onTap:  _openSeries,
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmer() => ListView(
+    children: const [
+      SizedBox(height: 480, child: ColoredBox(color: AppColors.surface)),
+      SizedBox(height: 28),
+      ShimmerSeriesRow(),
+      SizedBox(height: 28),
+      ShimmerSeriesRow(),
+    ],
+  );
+
+  Widget _buildError(AppLocalizations l) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.wifi_off, color: AppColors.textMuted, size: 48),
+        const SizedBox(height: 16),
+        Text(_error!, style: const TextStyle(color: AppColors.textMuted)),
+        const SizedBox(height: 20),
+        OutlinedButton(onPressed: _loadFeed, child: Text(l.retry.toUpperCase())),
+      ],
+    ),
+  );
+}
+
+// ── Genre filter strip ────────────────────────────────────────
+class _GenreFilter extends StatefulWidget {
+  final Function(String?) onGenreSelected;
+  const _GenreFilter({required this.onGenreSelected});
+  @override
+  State<_GenreFilter> createState() => _GenreFilterState();
+}
+
+class _GenreFilterState extends State<_GenreFilter> {
+  String? _selected;
+
+  static const _genres = [
+    'drama', 'romance', 'thriller', 'comedy', 'action', 'horror',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _genres.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final g = _genres[i];
+          return GenreChip(
+            label:    g,
+            selected: _selected == g,
+            onTap: () {
+              setState(() { _selected = _selected == g ? null : g; });
+              widget.onGenreSelected(_selected);
+            },
+          );
+        },
+      ),
+    );
+  }
+}
