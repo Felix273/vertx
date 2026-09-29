@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --font-syne: 'Syne', sans-serif;
-  --font-space-mono: 'Space Mono', monospace;
-  --font-dm-sans: 'DM Sans', sans-serif;
+  /* Deliberately local/system stacks: the dashboard must boot without a font CDN. */
+  --font-syne: 'Arial Black', 'Avenir Next', Arial, sans-serif;
+  --font-space-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --font-dm-sans: 'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;
   --admin-bg: #070812;
   --admin-surface: #0d1020;
   --admin-panel: #12162a;
