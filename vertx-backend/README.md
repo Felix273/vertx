@@ -29,6 +29,20 @@ API is live at: http://localhost:8000
 API Docs at:    http://localhost:8000/api/docs/
 Health probe:   http://localhost:8000/health/
 
+### Seed local demo data
+
+After migrations, create three published demo series with episodes and reusable
+local accounts:
+
+```bash
+python manage.py seed_demo
+```
+
+Default credentials are `producer@vertx.local`, `viewer@vertx.local`, and
+`admin@vertx.local`, all using `DemoPass123!`. Override the password with
+`python manage.py seed_demo --password 'YourLocalPassword'`. The command is
+idempotent and does not delete existing content unless `--reset` is supplied.
+
 ---
 
 ## Manual Setup (without Docker)
