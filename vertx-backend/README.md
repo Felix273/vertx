@@ -22,11 +22,12 @@ cp .env.example .env
 docker-compose up --build
 
 # 4. Create admin user (in a new terminal)
-docker-compose exec api python manage.py createsuperuser --role admin
+docker-compose exec api python manage.py createsuperuser
 ```
 
 API is live at: http://localhost:8000
 API Docs at:    http://localhost:8000/api/docs/
+Health probe:   http://localhost:8000/health/
 
 ---
 
@@ -111,7 +112,12 @@ Do not use `cd vertx-backend/vertx`; the backend files now live directly in
 | POST | /api/payments/subscribe/ | Start subscription |
 | POST | /api/payments/purchase/{series_id}/ | Buy series |
 | POST | /api/payments/webhook/{provider}/ | Provider callback |
-| GET | /api/payments/subscription/ | Check sub status |
+| GET  | /api/payments/subscription/ | Check sub status |
+| GET  | /api/payments/status/{payment_id}/ | Check payment status |
+
+Payment plans and series purchases are denominated in **KES**. Configure
+`MPESA_API_BASE_URL=https://sandbox.safaricom.co.ke` for sandbox or
+`https://api.safaricom.co.ke` for production.
 
 ---
 

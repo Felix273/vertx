@@ -7,9 +7,13 @@ from .views import (
     AdminUserListView,
     AdminUserToggleView,
     ModerationLogView,
+    AdminStatsView,
+    AdminPaymentListView,
 )
 
 urlpatterns = [
+    path('stats/',                     AdminStatsView.as_view(),          name='admin-stats'),
+    path('payments/',                  AdminPaymentListView.as_view(),   name='admin-payments'),
     path('queue/',                    ModerationQueueView.as_view(),    name='mod-queue'),
     path('series/',                   AdminSeriesListView.as_view(),     name='admin-series-list'),
     path('series/<uuid:pk>/approve/', ApproveSeriesView.as_view(),      name='series-approve'),

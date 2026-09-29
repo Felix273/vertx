@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -22,7 +22,7 @@ export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth()
   const [saving, setSaving] = useState(false)
 
-  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
+  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       studio_name: profile?.studio_name || '',
@@ -31,6 +31,16 @@ export default function ProfilePage() {
       website:     profile?.website || '',
     },
   })
+
+  useEffect(() => {
+    if (!profile) return
+    reset({
+      studio_name: profile.studio_name,
+      bio: profile.bio,
+      avatar_url: profile.avatar_url,
+      website: profile.website,
+    })
+  }, [profile, reset])
 
   const onSubmit = async (data: FormData) => {
     setSaving(true)

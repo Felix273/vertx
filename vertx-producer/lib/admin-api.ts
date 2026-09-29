@@ -20,6 +20,7 @@ export const adminApi = {
   // Audit log
   getLog: () => api.get('/admin/log/'),
 
-  // Payments (reuse payments history as admin sees all)
-  getPayments: () => api.get('/payments/history/'),
+  // Payments — platform-wide admin report
+  getPayments: (status?: string) =>
+    api.get('/admin/payments/', { params: status ? { status } : {} }),
 }

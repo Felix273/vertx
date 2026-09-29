@@ -17,6 +17,7 @@ from .serializers import (
     SeriesWriteSerializer,
     SeriesProducerSerializer,
     EpisodeSerializer,
+    EpisodeProducerSerializer,
     EpisodeWriteSerializer,
     EpisodeDetailSerializer,
     WatchHistorySerializer,
@@ -118,8 +119,8 @@ class ProducerSeriesDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.status == ContentStatus.PUBLISHED:
-            raise PermissionDenied('Published series cannot be edited. Contact admin.')
+        if instance.status not in (ContentStatus.DRAFT, ContentStatus.REJECTED):
+            raise PermissionDenied('Only draft or rejected series can be edited.')
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
@@ -178,7 +179,7 @@ class EpisodeListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return EpisodeWriteSerializer
-        return EpisodeSerializer
+        return EpisodeProducerSerializer
 
     def _get_series(self):
         return get_object_or_404(
@@ -197,8 +198,8 @@ class EpisodeListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         series = self._get_series()
-        if series.status == ContentStatus.PUBLISHED:
-            raise PermissionDenied('Cannot add episodes to a published series.')
+        if series.status not in (ContentStatus.DRAFT, ContentStatus.REJECTED):
+            raise PermissionDenied('Episodes can only be added to draft or rejected series.')
         serializer.save(series=series)
 
 
@@ -213,12 +214,24 @@ class EpisodeDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_serializer_class(self):
         if self.request.method in ('PUT', 'PATCH'):
             return EpisodeWriteSerializer
-        return EpisodeSerializer
+        return EpisodeProducerSerializer
 
     def get_queryset(self):
         return Episode.objects.filter(
             series__producer=self.request.user.producer_profile
         )
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.series.status not in (ContentStatus.DRAFT, ContentStatus.REJECTED):
+            raise PermissionDenied('Episodes can only be edited in draft or rejected series.')
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.series.status not in (ContentStatus.DRAFT, ContentStatus.REJECTED):
+            raise PermissionDenied('Episodes can only be deleted from draft or rejected series.')
+        return super().destroy(request, *args, **kwargs)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -270,16 +283,40 @@ class WatchProgressView(APIView):
             series__status=ContentStatus.PUBLISHED
         )
 
+        if not user_can_watch(request.user, episode.series):
+            return Response({'error': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = ProgressUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        progress_secs = serializer.validated_data['progress_secs']
+        if episode.duration_secs:
+            progress_secs = min(progress_secs, episode.duration_secs)
+        completed = serializer.validated_data.get('completed', False)
+        if episode.duration_secs and progress_secs >= episode.duration_secs:
+            completed = True
 
         record, _ = WatchHistory.objects.update_or_create(
             user=request.user,
             episode=episode,
-            defaults=serializer.validated_data
+            defaults={'progress_secs': progress_secs, 'completed': completed}
         )
 
         return Response({'message': 'Progress saved.', 'completed': record.completed})
+
+    def get(self, request, episode_id):
+        episode = get_object_or_404(
+            Episode, id=episode_id,
+            series__status=ContentStatus.PUBLISHED,
+        )
+        if not user_can_watch(request.user, episode.series):
+            return Response({'error': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
+        record = WatchHistory.objects.filter(user=request.user, episode=episode).first()
+        return Response({
+            'episode_id': str(episode.id),
+            'progress_secs': record.progress_secs if record else 0,
+            'completed': record.completed if record else False,
+        })
 
 
 class ContinueWatchingView(generics.ListAPIView):

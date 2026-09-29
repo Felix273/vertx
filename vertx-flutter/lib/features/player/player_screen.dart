@@ -97,6 +97,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _controllers[idx] = controller;
       await player.open(Media(url), play: false);
       if (mounted && idx == _currentIdx) {
+        try {
+          final progress = await _api.getProgress(ep.id);
+          final seconds = (progress['progress_secs'] as num?)?.toInt() ?? 0;
+          final completed = progress['completed'] == true;
+          if (seconds > 0 && !completed) {
+            await player.seek(Duration(seconds: seconds));
+          }
+        } catch (_) {}
         player.play();
         _subs.add(player.stream.position.listen((p) {
           if (mounted && idx == _currentIdx) setState(() => _position = p);
@@ -111,8 +119,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           if (c && mounted) _onEpisodeComplete(idx);
         }));
       }
-      setState(() {});
-      if (idx + 1 < _episodes.length) _initPlayer(idx + 1);
+      if (mounted) setState(() {});
     } catch (e) {
       if (mounted && e.toString().contains('403')) {
         context.pushReplacement('/paywall/${widget.seriesId}');

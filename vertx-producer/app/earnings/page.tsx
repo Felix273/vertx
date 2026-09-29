@@ -19,7 +19,7 @@ export default function EarningsPage() {
   const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
-    paymentsApi.history()
+    paymentsApi.earnings()
       .then((r) => setPayments(r.data.results ?? r.data))
       .catch(() => {})
       .finally(() => setLoading(false))

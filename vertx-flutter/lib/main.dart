@@ -62,7 +62,7 @@ final _router = GoRouter(
         GoRoute(path: '/search', builder: (c, s) => const SearchScreen()),
         GoRoute(
             path: '/watching',
-            builder: (c, s) => const ContinueWatchingScreen()),
+            builder: (c, s) => const ContinueWatchingScreenImpl()),
         GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
       ],
     ),
@@ -110,11 +110,4 @@ class VertxApp extends StatelessWidget {
       ],
     );
   }
-}
-
-// Stub — will be implemented below
-class ContinueWatchingScreen extends StatelessWidget {
-  const ContinueWatchingScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
 }

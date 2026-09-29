@@ -32,13 +32,13 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status === 401 && !original._retry) {
+    if (error.response?.status === 401 && original && !original._retry) {
       original._retry = true
 
       if (refreshing) {
         return new Promise((resolve) => {
           queue.push((token: string) => {
-            original.headers.Authorization = `Bearer ${token}`
+            if (original.headers) original.headers.Authorization = `Bearer ${token}`
             resolve(api(original))
           })
         })
@@ -64,7 +64,7 @@ api.interceptors.response.use(
         queue = []
         refreshing = false
 
-        original.headers.Authorization = `Bearer ${newAccess}`
+        if (original.headers) original.headers.Authorization = `Bearer ${newAccess}`
         return api(original)
       } catch {
         clearAuth()
@@ -120,4 +120,5 @@ export const contentApi = {
 
 export const paymentsApi = {
   history: () => api.get('/payments/history/'),
+  earnings: () => api.get('/payments/earnings/'),
 }

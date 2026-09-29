@@ -144,6 +144,7 @@ class WatchRecord {
   final int episodeNum;
   final String episodeTitle;
   final String thumbnail;
+  final int episodeDurationSecs;
   final int progressSecs;
   final bool completed;
   final String watchedAt;
@@ -155,6 +156,7 @@ class WatchRecord {
     required this.episodeNum,
     required this.episodeTitle,
     required this.thumbnail,
+    required this.episodeDurationSecs,
     required this.progressSecs,
     required this.completed,
     required this.watchedAt,
@@ -167,6 +169,7 @@ class WatchRecord {
         episodeNum: j['episode_num'] as int,
         episodeTitle: j['episode_title'] as String,
         thumbnail: j['thumbnail'] as String? ?? '',
+        episodeDurationSecs: j['episode_duration_secs'] as int? ?? 0,
         progressSecs: j['progress_secs'] as int,
         completed: j['completed'] as bool,
         watchedAt: j['watched_at'] as String,

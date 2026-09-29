@@ -73,7 +73,7 @@ lib/
 - Phone number input with +254 prefix
 - STK Push via backend Daraja API
 - Waiting screen while user enters PIN
-- Switches to production via MPESA_ENV=production in Django .env
+- Switches to production via MPESA_API_BASE_URL in Django .env
 
 ### Bilingual
 - Default locale: Swahili (sw)
@@ -92,7 +92,7 @@ These are set in `lib/core/constants.dart` and mirrored in the Django backend `a
 ## Switching M-Pesa to Production
 In your Django `.env`:
 ```
-MPESA_ENV=production
+MPESA_API_BASE_URL=https://api.safaricom.co.ke
 MPESA_CONSUMER_KEY=<your-production-key>
 MPESA_CONSUMER_SECRET=<your-production-secret>
 MPESA_SHORTCODE=<your-till-or-paybill>

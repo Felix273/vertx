@@ -285,7 +285,9 @@ class _ContinueWatchingScreenImplState
                       const Divider(color: AppColors.border, height: 1),
                   itemBuilder: (_, i) {
                     final r = _records[i];
-                    final progress = r.progressSecs / 120; // rough estimate
+                    final progress = r.episodeDurationSecs > 0
+                        ? r.progressSecs / r.episodeDurationSecs
+                        : 0.0;
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       leading: Stack(

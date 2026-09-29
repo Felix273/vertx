@@ -164,7 +164,7 @@ export default function SeriesDetailPage() {
   if (!series) return null
 
   const canSubmit = series.status === 'draft' || series.status === 'rejected'
-  const canEdit   = series.status !== 'published'
+  const canEdit   = series.status === 'draft' || series.status === 'rejected'
 
   return (
     <div className="animate-fade-in">

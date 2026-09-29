@@ -4,11 +4,13 @@ VERTX Platform — Root URL Configuration
 
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
+    path('health/', lambda request: JsonResponse({'status': 'ok'}), name='health'),
     # Django admin (internal use only)
     path('django-admin/', admin.site.urls),
 

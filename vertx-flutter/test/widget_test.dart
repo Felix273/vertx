@@ -1,30 +1,58 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:vertx/main.dart';
+import 'package:vertx/shared/models/models.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('series and access models parse API responses', () {
+    final series = Series.fromJson({
+      'id': 'series-1',
+      'title': 'Test Series',
+      'description': 'A test story',
+      'genre': 'drama',
+      'thumbnail_url': '',
+      'trailer_url': '',
+      'price': '99.00',
+      'is_free': false,
+      'producer_name': 'Test Studio',
+      'episode_count': 1,
+      'episodes': [
+        {
+          'id': 'episode-1',
+          'episode_number': 1,
+          'title': 'Episode One',
+          'description': '',
+          'duration_secs': 60,
+          'thumbnail_url': '',
+        },
+      ],
+    });
+    final access = AccessStatus.fromJson({
+      'has_access': false,
+      'reason': 'no_access',
+      'options': {'subscribe': true, 'purchase': true, 'price': '99.00'},
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(series.title, 'Test Series');
+    expect(series.episodes.single.durationDisplay, '1:00');
+    expect(access.canSubscribe, isTrue);
+    expect(access.canPurchase, isTrue);
+    expect(access.purchasePrice, '99.00');
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('continue-watching records use server-provided duration', () {
+    final record = WatchRecord.fromJson({
+      'id': 'watch-1',
+      'series_id': 'series-1',
+      'series_title': 'Test Series',
+      'episode_num': 1,
+      'episode_title': 'Episode One',
+      'thumbnail': '',
+      'episode_duration_secs': 240,
+      'progress_secs': 120,
+      'completed': false,
+      'watched_at': '2026-01-01T00:00:00Z',
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(record.episodeDurationSecs, 240);
+    expect(record.progressSecs / record.episodeDurationSecs, 0.5);
   });
 }

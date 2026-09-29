@@ -2,6 +2,7 @@
 // VERTX — M-Pesa paywall
 // Shows KES 99 weekly / KES 299 monthly plans + STK Push flow
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -30,6 +31,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   // Payment flow state
   bool _paying = false;
   bool _waiting = false; // waiting for STK PIN
+  String? _paymentId;
+  Timer? _paymentTimer;
+  bool _checkingPayment = false;
   String? _phoneError;
   String? _paymentError;
   String? _paymentSuccess;
@@ -39,6 +43,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.seriesId == 'any') {
+      _loadingSeries = false;
+      return;
+    }
     _api
         .getSeriesDetail(widget.seriesId)
         .then((s) => setState(() {
@@ -53,6 +61,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   void dispose() {
     _phoneCtrl.dispose();
+    _paymentTimer?.cancel();
     super.dispose();
   }
 
@@ -82,12 +91,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
     try {
       final planStr = _selectedPlan == _Plan.weekly ? 'weekly' : 'monthly';
-      await _api.initiateSubscription(
+      final result = await _api.initiateSubscription(
           plan: planStr, phone: _phoneCtrl.text.trim());
+      _paymentId = result['payment_id'] as String?;
+      if (_paymentId == null) throw StateError('Payment reference missing.');
       setState(() {
         _paying = false;
         _waiting = true;
       });
+      _startPaymentPolling();
     } catch (e) {
       setState(() {
         _paying = false;
@@ -112,14 +124,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
     });
 
     try {
-      await _api.purchaseSeries(
+      final result = await _api.purchaseSeries(
         seriesId: widget.seriesId,
         phone: _phoneCtrl.text.trim(),
       );
+      _paymentId = result['payment_id'] as String?;
+      if (_paymentId == null) throw StateError('Payment reference missing.');
       setState(() {
         _paying = false;
         _waiting = true;
       });
+      _startPaymentPolling();
     } catch (e) {
       final msg = e.toString().contains('already own')
           ? l.alreadyOwns
@@ -131,9 +146,46 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
   }
 
+  void _startPaymentPolling() {
+    _paymentTimer?.cancel();
+    _checkPaymentStatus();
+    _paymentTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _checkPaymentStatus();
+    });
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    if (_paymentId == null || _checkingPayment || !mounted) return;
+    _checkingPayment = true;
+    try {
+      final result = await _api.getPaymentStatus(_paymentId!);
+      final state = result['status'] as String?;
+      if (state == 'success' && result['fulfilled'] == true) {
+        _paymentTimer?.cancel();
+        if (mounted) {
+          final destination = widget.seriesId == 'any'
+              ? '/profile'
+              : '/series/${widget.seriesId}';
+          context.pushReplacement(destination);
+        }
+      } else if (state == 'failed') {
+        _paymentTimer?.cancel();
+        if (mounted) {
+          setState(() {
+            _waiting = false;
+            _paymentError = AppLocalizations.of(context).paymentFailed;
+          });
+        }
+      }
+    } catch (_) {
+      // Keep polling while the provider callback is still pending.
+    } finally {
+      _checkingPayment = false;
+    }
+  }
+
   void _onPaymentConfirmed() {
-    // Navigate back to series detail to recheck access
-    context.pushReplacement('/series/${widget.seriesId}');
+    _checkPaymentStatus();
   }
 
   @override

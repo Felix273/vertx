@@ -100,17 +100,20 @@ class MpesaProvider(BasePaymentProvider):
         self.shortcode       = settings.MPESA_SHORTCODE
         self.passkey         = settings.MPESA_PASSKEY
         self.callback_url    = settings.MPESA_CALLBACK_URL
+        self.api_base_url    = settings.MPESA_API_BASE_URL.rstrip('/')
 
     def initiate_payment(self, amount: Decimal, currency: str, metadata: dict) -> dict:
         # STK Push — sends a payment prompt to the user's phone
         token     = self._get_access_token()
         timestamp = self._get_timestamp()
         password  = self._get_password(timestamp)
-        phone     = metadata.get('phone')
+        phone     = self._normalize_phone(metadata.get('phone'))
+        if not phone:
+            raise ValueError('A valid Kenyan phone number is required for M-Pesa.')
 
         import requests
         response = requests.post(
-            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+            f'{self.api_base_url}/mpesa/stkpush/v1/processrequest',
             headers={'Authorization': f'Bearer {token}'},
             json={
                 'BusinessShortCode': self.shortcode,
@@ -124,11 +127,21 @@ class MpesaProvider(BasePaymentProvider):
                 'CallBackURL':      self.callback_url,
                 'AccountReference': metadata.get('reference', 'VERTX'),
                 'TransactionDesc':  metadata.get('description', 'VERTX Payment'),
-            }
-        ).json()
+            },
+            timeout=15,
+        )
+        response.raise_for_status()
+        response = response.json()
+        reference = response.get('CheckoutRequestID')
+        if not reference:
+            raise ValueError(
+                response.get('errorMessage')
+                or response.get('ResponseDescription')
+                or 'M-Pesa request was not accepted.'
+            )
 
         return {
-            'reference':    response.get('CheckoutRequestID'),
+            'reference':    reference,
             'redirect_url': None,
             'instructions': 'Check your phone for the M-Pesa payment prompt.',
         }
@@ -149,10 +162,23 @@ class MpesaProvider(BasePaymentProvider):
             f'{self.consumer_key}:{self.consumer_secret}'.encode()
         ).decode()
         r = requests.get(
-            'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
-            headers={'Authorization': f'Basic {credentials}'}
+            f'{self.api_base_url}/oauth/v1/generate?grant_type=client_credentials',
+            headers={'Authorization': f'Basic {credentials}'},
+            timeout=15,
         )
+        r.raise_for_status()
         return r.json()['access_token']
+
+    @staticmethod
+    def _normalize_phone(phone):
+        digits = ''.join(ch for ch in str(phone or '') if ch.isdigit())
+        if digits.startswith('0') and len(digits) == 10:
+            return f'254{digits[1:]}'
+        if digits.startswith('7') and len(digits) == 9:
+            return f'254{digits}'
+        if digits.startswith('254') and len(digits) == 12:
+            return digits
+        return None
 
     def _get_timestamp(self):
         from datetime import datetime

@@ -160,6 +160,11 @@ class ApiService {
     return r.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> getProgress(String episodeId) async {
+    final r = await _dio.get('/episodes/$episodeId/progress/');
+    return r.data as Map<String, dynamic>;
+  }
+
   Future<void> saveProgress(String episodeId, int progressSecs,
       {bool completed = false}) async {
     await _dio.post('/episodes/$episodeId/progress/', data: {
@@ -203,6 +208,11 @@ class ApiService {
 
   Future<Map<String, dynamic>> getSubscriptionStatus() async {
     final r = await _dio.get('/payments/subscription/');
+    return r.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getPaymentStatus(String paymentId) async {
+    final r = await _dio.get('/payments/status/$paymentId/');
     return r.data as Map<String, dynamic>;
   }
 }

@@ -8,29 +8,34 @@ from .models import Series, Episode, WatchHistory
 
 
 class EpisodeSerializer(serializers.ModelSerializer):
+    """Public episode metadata; the stream URL is always gated separately."""
     duration_display = serializers.ReadOnlyField()
 
     class Meta:
-        model  = Episode
+        model = Episode
         fields = (
             'id', 'episode_number', 'title', 'description',
             'thumbnail_url', 'duration_secs', 'duration_display',
             'created_at',
         )
-        # video_url is intentionally excluded from list view —
-        # served via /stream/ endpoint after access check
 
 
 class EpisodeDetailSerializer(EpisodeSerializer):
-    """Full episode data including stream URL — only after access verified."""
+    """Full episode data including stream URL after access is verified."""
     class Meta(EpisodeSerializer.Meta):
         fields = EpisodeSerializer.Meta.fields + ('video_url',)
 
 
+class EpisodeProducerSerializer(EpisodeSerializer):
+    """Producer-facing episode data, including editable video metadata."""
+    class Meta(EpisodeSerializer.Meta):
+        fields = EpisodeSerializer.Meta.fields + ('video_url', 'video_id', 'updated_at')
+
+
 class EpisodeWriteSerializer(serializers.ModelSerializer):
-    """Used by producers to create/update episodes."""
+    """Used by producers to create or update episodes."""
     class Meta:
-        model  = Episode
+        model = Episode
         fields = (
             'episode_number', 'title', 'description',
             'video_url', 'video_id', 'duration_secs', 'thumbnail_url',
@@ -54,7 +59,7 @@ class SeriesListSerializer(serializers.ModelSerializer):
     episode_count = serializers.ReadOnlyField()
 
     class Meta:
-        model  = Series
+        model = Series
         fields = (
             'id', 'title', 'description', 'genre',
             'thumbnail_url', 'price', 'is_free',
@@ -63,13 +68,13 @@ class SeriesListSerializer(serializers.ModelSerializer):
 
 
 class SeriesDetailSerializer(serializers.ModelSerializer):
-    """Full series with episode list — used on series detail page."""
+    """Full published series with public episode metadata."""
     producer_name = serializers.CharField(source='producer.studio_name', read_only=True)
     episode_count = serializers.ReadOnlyField()
-    episodes      = EpisodeSerializer(many=True, read_only=True)
+    episodes = EpisodeSerializer(many=True, read_only=True)
 
     class Meta:
-        model  = Series
+        model = Series
         fields = (
             'id', 'title', 'description', 'genre',
             'thumbnail_url', 'trailer_url',
@@ -82,21 +87,27 @@ class SeriesDetailSerializer(serializers.ModelSerializer):
 class SeriesWriteSerializer(serializers.ModelSerializer):
     """Used by producers to create/update series."""
     class Meta:
-        model  = Series
+        model = Series
         fields = (
             'title', 'description', 'genre',
             'thumbnail_url', 'trailer_url',
             'price', 'is_free',
         )
 
+    def validate(self, attrs):
+        # Free content should never carry a second, conflicting purchase price.
+        if attrs.get('is_free') is True:
+            attrs['price'] = 0
+        return attrs
+
 
 class SeriesProducerSerializer(serializers.ModelSerializer):
-    """Producer's own view — includes status field."""
+    """Producer's own view — includes status and editable episode metadata."""
     episode_count = serializers.ReadOnlyField()
-    episodes      = EpisodeSerializer(many=True, read_only=True)
+    episodes = EpisodeProducerSerializer(many=True, read_only=True)
 
     class Meta:
-        model  = Series
+        model = Series
         fields = (
             'id', 'title', 'description', 'genre',
             'thumbnail_url', 'trailer_url',
@@ -108,21 +119,22 @@ class SeriesProducerSerializer(serializers.ModelSerializer):
 
 
 class WatchHistorySerializer(serializers.ModelSerializer):
-    series_id    = serializers.UUIDField(source='episode.series.id', read_only=True)
+    series_id = serializers.UUIDField(source='episode.series.id', read_only=True)
     series_title = serializers.CharField(source='episode.series.title', read_only=True)
-    episode_num  = serializers.IntegerField(source='episode.episode_number', read_only=True)
-    episode_title= serializers.CharField(source='episode.title', read_only=True)
-    thumbnail    = serializers.URLField(source='episode.thumbnail_url', read_only=True)
+    episode_num = serializers.IntegerField(source='episode.episode_number', read_only=True)
+    episode_title = serializers.CharField(source='episode.title', read_only=True)
+    thumbnail = serializers.URLField(source='episode.thumbnail_url', read_only=True)
+    episode_duration_secs = serializers.IntegerField(source='episode.duration_secs', read_only=True)
 
     class Meta:
-        model  = WatchHistory
+        model = WatchHistory
         fields = (
             'id', 'series_id', 'series_title',
             'episode_num', 'episode_title', 'thumbnail',
-            'progress_secs', 'completed', 'watched_at',
+            'episode_duration_secs', 'progress_secs', 'completed', 'watched_at',
         )
 
 
 class ProgressUpdateSerializer(serializers.Serializer):
     progress_secs = serializers.IntegerField(min_value=0)
-    completed     = serializers.BooleanField(default=False)
+    completed = serializers.BooleanField(default=False)

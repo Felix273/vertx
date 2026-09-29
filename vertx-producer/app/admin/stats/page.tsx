@@ -35,7 +35,7 @@ export default function AdminStatsPage() {
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size={28} /></div>
 
-  // If stats endpoint doesn't exist yet, show a useful fallback
+  // Keep the admin shell usable if the API is temporarily unavailable.
   if (error || !stats) return <StatsUnavailable />
 
   const statCards = [
@@ -84,7 +84,7 @@ function StatsUnavailable() {
         ))}
       </div>
       <p className="text-muted text-xs mt-6 font-mono">
-        Add <code className="text-accent3">/admin/stats/</code> endpoint to Django to enable live stats.
+        The stats service is temporarily unavailable. Try refreshing in a moment.
       </p>
     </div>
   )

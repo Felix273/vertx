@@ -36,7 +36,7 @@ class Payment(models.Model):
     user               = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     provider           = models.CharField(max_length=50, help_text='e.g. stripe, mpesa, flutterwave')
     amount             = models.DecimalField(max_digits=10, decimal_places=2)
-    currency           = models.CharField(max_length=10, default='USD')
+    currency           = models.CharField(max_length=10, default='KES')
     status             = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     provider_reference = models.CharField(max_length=255, blank=True, db_index=True)
     metadata           = models.JSONField(default=dict, blank=True)

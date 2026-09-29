@@ -5,6 +5,7 @@ Admin-only endpoints for reviewing and publishing content.
 
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db.models import Count, Sum
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +16,7 @@ from apps.content.serializers import SeriesDetailSerializer
 from apps.users.models import User
 from apps.users.permissions import IsAdmin
 from apps.users.serializers import UserProfileSerializer
+from apps.payments.models import Payment, PaymentStatus, Subscription, SubscriptionStatus
 from .models import ModerationLog, ModerationAction
 
 
@@ -54,6 +56,38 @@ class AdminSeriesSerializer(serializers.ModelSerializer):
             'producer_name', 'producer_email',
             'episode_count', 'created_at', 'updated_at',
         )
+
+
+class AdminUserSerializer(UserProfileSerializer):
+    """Admin list representation with account activation state."""
+    class Meta(UserProfileSerializer.Meta):
+        fields = UserProfileSerializer.Meta.fields + ('is_active',)
+        read_only_fields = UserProfileSerializer.Meta.read_only_fields + ('is_active',)
+
+
+class AdminPaymentSerializer(serializers.ModelSerializer):
+    """Platform-wide payment view used by the admin portal."""
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    payment_type = serializers.SerializerMethodField()
+    series_title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Payment
+        fields = (
+            'id', 'user_email', 'user_name', 'provider', 'amount', 'currency',
+            'status', 'payment_type', 'series_title', 'created_at',
+        )
+
+    def get_payment_type(self, obj):
+        if obj.metadata.get('plan'):
+            return f"{obj.metadata['plan']} subscription"
+        if obj.metadata.get('series_id'):
+            return 'series purchase'
+        return 'payment'
+
+    def get_series_title(self, obj):
+        return obj.metadata.get('series_title')
 
 
 # ── Views ─────────────────────────────────────────────────────
@@ -164,7 +198,7 @@ class AdminUserListView(generics.ListAPIView):
     GET /api/admin/users/
     All platform users with optional role filter.
     """
-    serializer_class   = UserProfileSerializer
+    serializer_class   = AdminUserSerializer
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
@@ -207,3 +241,41 @@ class ModerationLogView(generics.ListAPIView):
         return ModerationLog.objects.select_related(
             'series', 'reviewed_by'
         ).order_by('-reviewed_at')
+
+
+class AdminStatsView(APIView):
+    """GET /api/admin/stats/ — aggregate platform metrics."""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        revenue = Payment.objects.filter(status=PaymentStatus.SUCCESS).aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        return Response({
+            'total_series': Series.objects.count(),
+            'published': Series.objects.filter(status=ContentStatus.PUBLISHED).count(),
+            'pending_review': Series.objects.filter(status=ContentStatus.PENDING_REVIEW).count(),
+            'rejected': Series.objects.filter(status=ContentStatus.REJECTED).count(),
+            'draft': Series.objects.filter(status=ContentStatus.DRAFT).count(),
+            'total_users': User.objects.count(),
+            'producers': User.objects.filter(role='producer').count(),
+            'viewers': User.objects.filter(role='viewer').count(),
+            'total_revenue': str(revenue),
+            'active_subs': Subscription.objects.filter(
+                status=SubscriptionStatus.ACTIVE,
+                expires_at__gt=timezone.now(),
+            ).count(),
+        })
+
+
+class AdminPaymentListView(generics.ListAPIView):
+    """GET /api/admin/payments/ — all platform payment records."""
+    serializer_class = AdminPaymentSerializer
+    permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        qs = Payment.objects.select_related('user')
+        payment_status = self.request.query_params.get('status')
+        if payment_status:
+            qs = qs.filter(status=payment_status)
+        return qs.order_by('-created_at')

@@ -6,6 +6,7 @@ export interface User {
   full_name:  string
   role:       UserRole
   created_at: string
+  is_active?: boolean
 }
 
 export interface ProducerProfile {
@@ -64,7 +65,9 @@ export interface Payment {
   provider:   string
   amount:     string
   currency:   string
-  status:     'pending' | 'success' | 'failed' | 'refunded'
+  status:      'pending' | 'success' | 'failed' | 'refunded'
+  payment_type?: string
+  series_title?: string
   created_at: string
 }
 
