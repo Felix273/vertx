@@ -286,7 +286,7 @@ class _HeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 560,
+      height: 600,
       child: Stack(children: [
         Positioned.fill(
           child: series.thumbnailUrl.isNotEmpty
@@ -340,11 +340,53 @@ class _HeroBanner extends StatelessWidget {
           ),
         ),
         Positioned(
+          top: 118,
+          right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.28),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white.withOpacity(0.18)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  series.isFree ? Icons.lock_open_rounded : Icons.star_rounded,
+                  size: 13,
+                  color: series.isFree ? AppColors.green : AppColors.gold,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  series.isFree ? 'FREE TO WATCH' : 'VERTX ORIGINAL',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
           bottom: 36,
           left: 20,
           right: 20,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+              '01  /  FEATURED TONIGHT',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.8,
+              ),
+            ),
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
