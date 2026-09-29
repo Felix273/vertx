@@ -117,6 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFeed() {
     final feed = _feed!;
+    if (feed.featured.isEmpty &&
+        feed.newContent.isEmpty &&
+        feed.free.isEmpty) {
+      return _buildEmptyCatalog();
+    }
     final featured = feed.featured.isNotEmpty ? feed.featured.first : null;
     return RefreshIndicator(
       color: AppColors.gold,
@@ -161,6 +166,78 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: _openSeries)),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyCatalog() {
+    return RefreshIndicator(
+      color: AppColors.gold,
+      backgroundColor: AppColors.surface,
+      onRefresh: _loadFeed,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 150, 24, 120),
+        children: [
+          Container(
+            width: 76,
+            height: 76,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: AppColors.posterGlow,
+              border: Border.all(color: AppColors.cyan.withOpacity(0.55)),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.movie_filter_rounded,
+                color: AppColors.cyan, size: 36),
+          ),
+          const SizedBox(height: 28),
+          const Text(
+            'Your cinema is warming up',
+            style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                height: 1.05),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'New local stories are on the way. Browse the catalog or pull to refresh when a producer publishes the first series.',
+            style: TextStyle(
+                color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+          ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => context.go('/search'),
+                  icon: const Icon(Icons.search_rounded),
+                  label: const Text('BROWSE CATALOG'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.cyan,
+                    foregroundColor: AppColors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    textStyle: const TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: _loadFeed,
+                tooltip: 'Refresh catalog',
+                icon: const Icon(Icons.refresh_rounded,
+                    color: AppColors.textPrimary),
+                style: IconButton.styleFrom(
+                  side: const BorderSide(color: AppColors.border),
+                  padding: const EdgeInsets.all(14),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 36),
+          const _SignalStrip(),
         ],
       ),
     );
