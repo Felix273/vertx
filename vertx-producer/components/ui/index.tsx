@@ -17,7 +17,7 @@ export function Button({
   variant = 'primary', size = 'md', loading, icon,
   children, className, disabled, ...props
 }: ButtonProps) {
-  const base = 'inline-flex items-center justify-center gap-2 font-mono text-xs tracking-widest uppercase transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed border'
+  const base = 'inline-flex items-center justify-center gap-2 rounded-lg font-mono text-xs tracking-widest uppercase transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed border focus-visible:ring-2 focus-visible:ring-accent/50'
 
   const variants = {
     primary:   'bg-accent text-black border-accent hover:bg-accent/90',
@@ -62,7 +62,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         className={clsx(
-          'w-full bg-surface border px-3 py-2.5 text-sm text-text placeholder:text-muted/50',
+          'w-full rounded-lg bg-surface border px-3 py-2.5 text-sm text-text placeholder:text-muted/50',
           'focus:outline-none focus:border-accent3 transition-colors',
           error ? 'border-accent2' : 'border-border',
           className
@@ -94,7 +94,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         ref={ref}
         rows={4}
         className={clsx(
-          'w-full bg-surface border px-3 py-2.5 text-sm text-text placeholder:text-muted/50 resize-none',
+          'w-full rounded-lg bg-surface border px-3 py-2.5 text-sm text-text placeholder:text-muted/50 resize-none',
           'focus:outline-none focus:border-accent3 transition-colors',
           error ? 'border-accent2' : 'border-border',
           className
@@ -125,7 +125,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       <select
         ref={ref}
         className={clsx(
-          'w-full bg-surface border px-3 py-2.5 text-sm text-text',
+          'w-full rounded-lg bg-surface border px-3 py-2.5 text-sm text-text',
           'focus:outline-none focus:border-accent3 transition-colors appearance-none cursor-pointer',
           error ? 'border-accent2' : 'border-border',
           className
@@ -147,7 +147,7 @@ Select.displayName = 'Select'
 // ── Card ──────────────────────────────────────────────────────
 export function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={clsx('bg-card border border-border', className)}>
+    <div className={clsx('rounded-2xl bg-card/80 border border-border shadow-[0_18px_50px_rgba(0,0,0,0.14)]', className)}>
       {children}
     </div>
   )
@@ -157,7 +157,7 @@ export function Card({ children, className }: { children: React.ReactNode; class
 export function StatusBadge({ status }: { status: ContentStatus }) {
   return (
     <span className={clsx(
-      'inline-block font-mono text-[0.6rem] tracking-widest uppercase px-2 py-0.5 border',
+      'inline-flex items-center rounded-full font-mono text-[0.6rem] tracking-widest uppercase px-2.5 py-1 border',
       STATUS_COLORS[status]
     )}>
       {STATUS_LABELS[status]}
@@ -180,8 +180,8 @@ export function EmptyState({
   action?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-      {icon && <div className="text-4xl mb-4 opacity-40">{icon}</div>}
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/40 py-20 text-center px-4">
+      {icon && <div className="mb-4 rounded-2xl border border-accent3/20 bg-accent3/10 p-4 text-3xl text-accent3">{icon}</div>}
       <p className="font-syne font-bold text-lg text-text mb-2">{title}</p>
       {description && <p className="text-muted text-sm max-w-sm">{description}</p>}
       {action && <div className="mt-6">{action}</div>}
@@ -204,7 +204,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className={clsx('relative w-full bg-card border border-border z-10 animate-fade-in', maxWidth)}>
+      <div className={clsx('relative w-full rounded-2xl bg-card border border-border z-10 animate-fade-in shadow-2xl', maxWidth)}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="font-syne font-bold text-base">{title}</h2>
           <button onClick={onClose} className="text-muted hover:text-text transition-colors p-1">
@@ -233,7 +233,7 @@ export function SectionHeader({
           {label}
         </p>
       )}
-      <h1 className="font-syne font-bold text-2xl tracking-tight">{title}</h1>
+      <h1 className="font-syne font-bold text-3xl tracking-tight md:text-4xl">{title}</h1>
       {description && <p className="text-muted text-sm mt-1">{description}</p>}
     </div>
   )

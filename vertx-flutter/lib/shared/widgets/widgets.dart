@@ -34,7 +34,7 @@ class SeriesPosterCard extends StatelessWidget {
           children: [
             // Poster image
             ClipRRect(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(14),
               child: Stack(
                 children: [
                   SizedBox(
@@ -120,8 +120,10 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration:
-          BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
+          decoration: BoxDecoration(
+              color: color.withOpacity(0.92),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white.withOpacity(0.15))),
       child: Text(text,
           style: const TextStyle(
               fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
@@ -325,7 +327,7 @@ class GenreChip extends StatelessWidget {
               color: selected
                   ? AppColors.gold
                   : AppColors.textMuted.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
@@ -355,10 +357,20 @@ class VxEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 56, color: AppColors.textMuted),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.panel,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.cyan.withOpacity(0.24)),
+            ),
+            child: Icon(icon, size: 40, color: AppColors.cyan),
+          ),
           const SizedBox(height: 16),
           Text(title,
               style: const TextStyle(
@@ -376,7 +388,8 @@ class VxEmptyState extends StatelessWidget {
             const SizedBox(height: 20),
             action!,
           ],
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -32,11 +32,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen bg-black overflow-hidden">
 
+      <header className="md:hidden fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-xl">
+        <Link href={user?.role === 'admin' ? '/admin/stats' : '/dashboard'} className="font-syne text-lg font-black tracking-tight">
+          VERT<span className="text-accent">X</span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 font-mono text-[0.55rem] uppercase tracking-widest text-accent">
+            {user?.role === 'admin' ? 'Admin' : 'Studio'}
+          </span>
+          <button onClick={logout} aria-label="Sign out" className="rounded-lg border border-border p-2 text-muted hover:text-text">
+            <LogOut size={15} />
+          </button>
+        </div>
+      </header>
+      <nav className="md:hidden fixed inset-x-0 top-16 z-20 flex gap-1 overflow-x-auto border-b border-border bg-surface/90 px-3 py-2 backdrop-blur-xl">
+        {[...PRODUCER_NAV, ...(user?.role === 'admin' ? ADMIN_NAV : [])].map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(href + '/')
+          return (
+            <Link key={href} href={href} className={clsx(
+              'flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 font-mono text-[0.58rem] uppercase tracking-widest transition',
+              active ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border text-muted'
+            )}>
+              <Icon size={12} /> {label}
+            </Link>
+          )
+        })}
+      </nav>
+
       {/* ── Sidebar ─────────────────────────────────────── */}
-      <aside className="w-60 flex-shrink-0 bg-surface border-r border-border flex flex-col relative z-10">
+      <aside className="hidden md:flex w-64 flex-shrink-0 bg-surface/90 border-r border-border flex-col relative z-10 backdrop-blur-xl">
 
         {/* Logo */}
-        <div className="px-6 py-5 border-b border-border">
+        <div className="px-6 py-6 border-b border-border">
           <div className="font-syne font-black text-xl tracking-tight">
             VERT<span className="text-accent">X</span>
           </div>
@@ -46,7 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Studio badge (producers) / Admin badge (admins) */}
-        <div className="px-6 py-3 border-b border-border">
+        <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 flex items-center justify-center text-xs font-mono font-bold ${
               user?.role === 'admin'
@@ -86,10 +113,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 key={href}
                 href={href}
                 className={clsx(
-                  'flex items-center gap-3 px-3 py-2.5 transition-all duration-150 group relative',
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 group relative',
                   active
-                    ? 'bg-accent/10 text-accent border-l-2 border-accent pl-[10px]'
-                    : 'text-muted hover:text-text hover:bg-white/3 border-l-2 border-transparent'
+                    ? 'bg-accent/10 text-accent border border-accent/20'
+                    : 'text-muted hover:text-text hover:bg-white/5 border border-transparent'
                 )}
               >
                 <Icon size={16} className="flex-shrink-0" />
@@ -118,10 +145,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     key={href}
                     href={href}
                     className={clsx(
-                      'flex items-center gap-3 px-3 py-2.5 transition-all duration-150 group relative',
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 group relative',
                       active
-                        ? 'bg-accent2/10 text-accent2 border-l-2 border-accent2 pl-[10px]'
-                        : 'text-muted hover:text-text hover:bg-white/3 border-l-2 border-transparent'
+                        ? 'bg-accent2/10 text-accent2 border border-accent2/20'
+                        : 'text-muted hover:text-text hover:bg-white/5 border border-transparent'
                     )}
                   >
                     <Icon size={16} className="flex-shrink-0" />
@@ -157,7 +184,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Main content ─────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto relative">
-        <div className="max-w-5xl mx-auto px-8 py-8">
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-32 md:px-8 md:py-10">
           {children}
         </div>
       </main>

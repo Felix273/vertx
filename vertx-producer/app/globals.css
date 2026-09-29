@@ -6,6 +6,39 @@
   --font-syne: 'Syne', sans-serif;
   --font-space-mono: 'Space Mono', monospace;
   --font-dm-sans: 'DM Sans', sans-serif;
+  --admin-bg: #070812;
+  --admin-surface: #0d1020;
+  --admin-panel: #12162a;
+  --admin-line: rgba(164, 174, 220, 0.14);
+  --admin-glow: rgba(124, 106, 255, 0.14);
+}
+
+html { background: var(--admin-bg); }
+body {
+  background:
+    radial-gradient(circle at 80% -10%, rgba(124,106,255,0.12), transparent 34rem),
+    var(--admin-bg);
+  color: #f4f6ff;
+  font-family: var(--font-dm-sans);
+}
+
+::selection { background: rgba(232,255,71,0.24); color: #fff; }
+
+@layer components {
+  .admin-surface {
+    background: linear-gradient(145deg, rgba(18,22,42,0.94), rgba(13,16,32,0.94));
+    border: 1px solid var(--admin-line);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+  }
+  .admin-kicker {
+    color: #a9b3d7;
+    font-family: var(--font-space-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .admin-table-row { transition: background-color 150ms ease, border-color 150ms ease; }
+  .admin-table-row:hover { background: rgba(255,255,255,0.035); }
 }
 
 /* Grid texture overlay */
@@ -23,8 +56,8 @@ body::before {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0e0e14; }
-::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 0; }
+::-webkit-scrollbar-track { background: #0b0d18; }
+::-webkit-scrollbar-thumb { background: #303554; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #7c6aff; }
 
 /* Focus ring */

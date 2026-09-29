@@ -23,6 +23,7 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Series> _results = [];
   bool _loading = false;
   bool _searched = false;
+  bool _error = false;
 
   void _onChanged(String q) {
     _debounce?.cancel();
@@ -40,6 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _loading = true;
       _searched = true;
+      _error = false;
     });
     try {
       final results = await _api.searchSeries(q.trim());
@@ -50,6 +52,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (_) {
       setState(() {
         _loading = false;
+        _error = true;
       });
     }
   }
@@ -105,13 +108,30 @@ class _SearchScreenState extends State<SearchScreen> {
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.gold))
+          : _error
+              ? VxEmptyState(
+                  icon: Icons.wifi_off_rounded,
+                  title: 'Search unavailable',
+                  subtitle: 'Check your connection and try again.',
+                  action: OutlinedButton.icon(
+                    onPressed: () => _search(_ctrl.text),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('TRY AGAIN'),
+                  ),
+                )
           : _searched && _results.isEmpty
               ? VxEmptyState(
                   icon: Icons.search_off,
                   title: 'Hakuna matokeo / No results',
                   subtitle: '"${_ctrl.text}"',
                 )
-              : GridView.builder(
+              : !_searched
+                  ? VxEmptyState(
+                      icon: Icons.explore_outlined,
+                      title: 'Find your next story',
+                      subtitle: 'Search by title, genre, or creator.',
+                    )
+                  : GridView.builder(
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,

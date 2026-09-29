@@ -5,8 +5,9 @@ import { adminApi } from '@/lib/admin-api'
 import { Card, SectionHeader, Spinner } from '@/components/ui'
 import {
   Film, Users, CreditCard, CheckCircle,
-  Clock, XCircle, TrendingUp, Eye,
+  Clock, XCircle, TrendingUp, Eye, RefreshCw,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface Stats {
   total_series:    number
@@ -26,12 +27,16 @@ export default function AdminStatsPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setError(false)
     adminApi.getStats()
       .then((r) => setStats(r.data))
-      .catch(() => setError(true))
+      .catch(() => { setError(true); toast.error('Could not refresh platform stats.') })
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(load, [])
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size={28} /></div>
 
@@ -51,8 +56,13 @@ export default function AdminStatsPage() {
 
   return (
     <div className="animate-fade-in">
-      <SectionHeader label="Admin" title="Platform Stats" description="Real-time overview of VERTX." />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <SectionHeader label="Admin / Overview" title="Platform Stats" description="A calm, real-time view of the VERTX network." />
+        <button onClick={load} className="inline-flex items-center gap-2 self-start rounded-lg border border-border px-3 py-2 font-mono text-[0.62rem] uppercase tracking-widest text-muted transition hover:border-accent hover:text-accent md:self-auto">
+          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {statCards.map(({ label, value, icon: Icon, color }) => (
           <Card key={label} className="p-4">
             <div className="flex items-start justify-between">

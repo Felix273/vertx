@@ -19,6 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _user;
   Map<String, dynamic>? _sub;
   bool _loading = true;
+  bool _error = false;
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) {
       setState(() {
         _loading = false;
+        _error = true;
       });
     }
   }
@@ -57,6 +59,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Scaffold(
         backgroundColor: AppColors.black,
         body: Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      );
+    }
+
+    if (_error || _user == null) {
+      return Scaffold(
+        backgroundColor: AppColors.black,
+        appBar: AppBar(title: Text(l.navProfile)),
+        body: VxEmptyState(
+          icon: Icons.person_off_outlined,
+          title: 'Profile unavailable',
+          subtitle: 'We could not load your account details.',
+          action: OutlinedButton.icon(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('TRY AGAIN'),
+          ),
+        ),
       );
     }
 
@@ -91,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    _user?.fullName.substring(0, 1).toUpperCase() ?? '?',
+                    (_user!.fullName.trim().isEmpty ? '?' : _user!.fullName.trim()[0]).toUpperCase(),
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,

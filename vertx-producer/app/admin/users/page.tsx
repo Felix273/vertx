@@ -132,6 +132,7 @@ export default function AdminUsersPage() {
       ) : filtered.length === 0 ? (
         <EmptyState icon={<Users />} title="No users found" />
       ) : (
+        <div className="overflow-x-auto rounded-2xl">
         <Card>
           {/* Header */}
           <div className="grid grid-cols-12 px-4 py-2 border-b border-border">
@@ -209,6 +210,7 @@ export default function AdminUsersPage() {
             )
           })}
         </Card>
+        </div>
       )}
     </div>
   )

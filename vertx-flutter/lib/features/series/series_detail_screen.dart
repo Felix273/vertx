@@ -22,6 +22,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Series? _series;
   AccessStatus? _access;
   bool _loading = true;
+  bool _error = false;
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     } catch (_) {
       setState(() {
         _loading = false;
+        _error = true;
       });
     }
   }
@@ -67,11 +69,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       );
     }
 
-    if (_series == null) {
+    if (_error || _series == null) {
       return Scaffold(
         backgroundColor: AppColors.black,
         appBar: AppBar(),
-        body: VxEmptyState(icon: Icons.error_outline, title: l.error),
+        body: VxEmptyState(
+          icon: Icons.error_outline,
+          title: 'Series unavailable',
+          subtitle: 'We could not load this story right now.',
+          action: OutlinedButton.icon(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('TRY AGAIN'),
+          ),
+        ),
       );
     }
 
@@ -227,7 +238,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 Text(l.episodes, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
 
-                ...s.episodes.asMap().entries.map((entry) {
+                if (s.episodes.isEmpty)
+                  VxEmptyState(
+                    icon: Icons.movie_creation_outlined,
+                    title: l.noContent,
+                    subtitle: 'Episodes will appear here when this series is ready.',
+                  )
+                else
+                  ...s.episodes.asMap().entries.map((entry) {
                   final idx = entry.key;
                   final ep = entry.value;
                   final locked = access?.hasAccess != true;
@@ -239,7 +257,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ? context.push('/paywall/${s.id}')
                         : _watchEpisode(idx),
                   );
-                }),
+                  }),
 
                 const SizedBox(height: 40),
               ]),

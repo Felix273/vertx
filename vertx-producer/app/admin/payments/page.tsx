@@ -121,6 +121,7 @@ export default function AdminPaymentsPage() {
           description="Transactions will appear here once users subscribe or purchase."
         />
       ) : (
+        <div className="overflow-x-auto rounded-2xl">
         <Card>
           {/* Table header */}
           <div className="grid grid-cols-12 px-4 py-2 border-b border-border">
@@ -195,6 +196,7 @@ export default function AdminPaymentsPage() {
             )
           })}
         </Card>
+        </div>
       )}
     </div>
   )
